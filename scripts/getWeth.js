@@ -1,5 +1,6 @@
 const { getNamedAccounts, ethers } = require("hardhat")
 const AMOUNT = ethers.utils.parseEther("0.02") // constant to include in payable functions
+const DISPLAY_AMOUNT = AMOUNT / 1e18
 
 async function getWeth() {
 	const { deployer } = await getNamedAccounts()
@@ -15,7 +16,8 @@ async function getWeth() {
 	const tx = await iWethContract.deposit({ value: AMOUNT })
 	await tx.wait(1)
 	const wethBalance = await iWethContract.balanceOf(deployer)
-	console.log(`Got ${wethBalance.toString()} WETH`) // returns with 18 decimals place see parseEther
+	// console.log(`Got ${wethBalance.toString()} WETH`) // returns with 18 decimals place see parseEther
+	console.log(`Swapped for ${DISPLAY_AMOUNT} WETH`) // returns .02
 }
 
-module.exports = { getWeth }
+module.exports = { getWeth, AMOUNT, DISPLAY_AMOUNT }
