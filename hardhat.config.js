@@ -25,7 +25,8 @@ module.exports = {
 			chainId: 31337,
 			// saveDeployments: true,
 			forking: {
-				url: LM_MAINNET_RPC_URL, // KEY change
+				// url: LM_MAINNET_RPC_URL, // KEY change
+				url: DEV_MAINNET_RPC_URL,
 			},
 			// blockConfirmations: 5,
 		},
@@ -38,7 +39,7 @@ module.exports = {
 		},
 	},
 	solidity: {
-		compilers: [{ version: "0.8.7" }, { version: "0.4.19" }],
+		compilers: [{ version: "0.8.7" }, { version: "0.4.19" }, { version: "0.6.12" }],
 	},
 	namedAccounts: {
 		deployer: {
