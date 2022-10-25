@@ -17,8 +17,70 @@ async function main() {
 	)
 	await approveErc20(wethTokenAddress, lendingPoolContract.address, AMOUNT, deployer)
 	console.log("Preparing to deposit..")
-	await lendingPoolContract.deposit(wethTokenAddress, AMOUNT, deployer, 0)
+	let txDeposit = await lendingPoolContract.deposit(wethTokenAddress, AMOUNT, deployer, 0)
+	txDeposit.wait(1)
 	console.log("Deposit is confirmed")
+
+	// need info such as how much we can borrow, collateral, and liquidationthreshold
+	let { availableBorrowsETH, totalDebtETH } = await getBorrowUserData(
+		lendingPoolContract,
+		deployer
+	)
+	// time to borrow
+	// availableBorrowsEth conversation rate to DAI
+	console.log("Checking DAI price in ETH, one moment please")
+	const daiPrice = await getDaiPrice() // 18d
+	//  amount of $DAI we can borrow from the $ETH we have deposited.
+	const amountDaiToBorrow = availableBorrowsETH.toString() * 0.95 * (1 / daiPrice.toNumber())
+	// .95 to not hit health factor of 1
+	console.log(`You can borrow ${amountDaiToBorrow} DAI`)
+	const amountDaiToBorrowWei = ethers.utils.parseEther(amountDaiToBorrow.toString()) //parseEther is String to bigNumber
+	// 18d so same as ether to wei
+
+	const daiTokenAddress = "0x6B175474E89094C44Da98b954EedeAC495271d0F"
+	await borrowDai(daiTokenAddress, lendingPoolContract, amountDaiToBorrowWei, deployer)
+	await getBorrowUserData(lendingPoolContract, deployer)
+}
+
+async function borrowDai(daiAddress, lendingPoolContract, amountDaiToBorrowWei, account) {
+	console.log("Borrowing DAI, one moment please")
+	const borrowTx = await lendingPoolContract.borrow(
+		daiAddress,
+		amountDaiToBorrowWei,
+		1,
+		0,
+		account
+	)
+	await borrowTx.wait(1)
+	console.log("You've borrowed DAI!")
+}
+
+async function getDaiPrice() {
+	const daiEthPriceFeed = await ethers.getContractAt(
+		"AggregatorV3Interface",
+		"0x773616E4d11A78F511299002da57A0a94577F1f4"
+	) // not connected to deployer account since not sending txs, only reading
+	// const decimals = await daiEthPriceFeed.decimals()
+	const price = (await daiEthPriceFeed.latestRoundData())[1] // store only our price/answer returned as 2 variable or 1 index
+
+	console.log(`The DAI/ETH price is ${price.toString()}`)
+	return price
+}
+
+async function getBorrowUserData(lendingPoolContract, address) {
+	const { totalCollateralETH, totalDebtETH, availableBorrowsETH } =
+		await lendingPoolContract.getUserAccountData(address)
+	let viewColl = totalCollateralETH / 1e18
+	let viewDebt = totalDebtETH / 1e18
+	let viewBorrowETH = availableBorrowsETH / 1e18
+	console.log(`You have ${totalCollateralETH} worth of ETH of deposited.`)
+	console.log(`PRETTY You have ${viewColl.toString()} worth of ETH of deposited.`)
+	console.log(`You have ${totalDebtETH} worth of ETH borrowed.`)
+	console.log(`PRETTY You have ${viewDebt.toString()} worth of ETH borrowed.`)
+	console.log(`You can borrow ${availableBorrowsETH} worth of ETH.`)
+	console.log(`PRETTY You can borrow ${viewBorrowETH.toString()} worth of ETH.`)
+
+	return { availableBorrowsETH, totalDebtETH }
 }
 
 async function getLendingPool(address) {
