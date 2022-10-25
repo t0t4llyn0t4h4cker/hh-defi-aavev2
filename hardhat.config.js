@@ -25,8 +25,8 @@ module.exports = {
 			chainId: 31337,
 			// saveDeployments: true,
 			forking: {
-				url: LM_MAINNET_RPC_URL, // KEY change
-				// url: DEV_MAINNET_RPC_URL,
+				// url: LM_MAINNET_RPC_URL, // KEY change
+				url: DEV_MAINNET_RPC_URL,
 			},
 			// blockConfirmations: 5,
 		},

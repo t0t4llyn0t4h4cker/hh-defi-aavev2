@@ -43,6 +43,7 @@ async function main() {
 
 	await repay(amountDaiToBorrowWei, daiTokenAddress, lendingPoolContract, deployer)
 	await getBorrowUserData(lendingPoolContract, deployer)
+	// pay off reminder of DAI debt here
 }
 
 async function repay(amount, daiAddress, lendingPoolContract, account) {
